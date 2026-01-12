@@ -1,0 +1,44 @@
+services:
+  issuing-db:
+    image: mariadb:11
+    container_name: ejbca-issuing-db
+    restart: unless-stopped
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=ejbca_issuing
+      - MYSQL_USER=ejbca_issuing
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+    volumes:
+      - issuing_db:/var/lib/mysql:rw
+    networks:
+      - app
+
+  ejbca-issuing:
+    image: keyfactor/ejbca-ce:9.3.7
+    container_name: ejbca-issuing
+    hostname: ejbca-issuing
+    depends_on:
+      - issuing-db
+    restart: unless-stopped
+    environment:
+      - DATABASE_JDBC_URL=jdbc:mariadb://issuing-db:3306/ejbca_issuing?characterEncoding=UTF-8
+      - DATABASE_USER=ejbca_issuing
+      - DATABASE_PASSWORD=${MYSQL_PASSWORD}
+      - TLS_SETUP_ENABLED=simple
+      - LOG_LEVEL_APP=INFO
+      - LOG_LEVEL_SERVER=INFO
+    networks:
+      - app
+      - access
+    ports:
+      - "80:8080"
+      - "443:8443"
+
+networks:
+  app:
+    driver: bridge
+  access:
+    driver: bridge
+
+volumes:
+  issuing_db:

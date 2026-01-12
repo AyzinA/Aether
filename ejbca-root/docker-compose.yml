@@ -1,0 +1,48 @@
+services:
+  root-db:
+    image: mariadb:11
+    container_name: ejbca-root-db
+    restart: unless-stopped
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=ejbca_root
+      - MYSQL_USER=ejbca_root
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+    volumes:
+      - root_db:/var/lib/mysql:rw
+    networks:
+      - app
+
+  ejbca-root:
+    image: keyfactor/ejbca-ce:9.3.7
+    container_name: ejbca-root
+    hostname: ejbca-root
+    depends_on:
+      - root-db
+    restart: "no" # keep it offline by default; start manually when needed
+    environment:
+      - DATABASE_JDBC_URL=jdbc:mariadb://root-db:3306/ejbca_root?characterEncoding=UTF-8
+      - DATABASE_USER=ejbca_root
+      - DATABASE_PASSWORD=${MYSQL_PASSWORD}
+      - TLS_SETUP_ENABLED=simple
+      - LOG_LEVEL_APP=INFO
+      - LOG_LEVEL_SERVER=INFO
+    networks:
+      - app
+      - access
+    # IMPORTANT: don't expose to the world. Bind to localhost or a mgmt-only interface.
+    ports:
+      - "127.0.0.1:8080:8080"
+      - "127.0.0.1:8443:8443"
+    volumes:
+      - root_ejbca:/opt/ejbca/p12 # optional (keep your PKCS#12 exports safe)
+
+networks:
+  app:
+    driver: bridge
+  access:
+    driver: bridge
+
+volumes:
+  root_db:
+  root_ejbca:
