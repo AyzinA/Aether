@@ -241,3 +241,34 @@ If signing fails with "Subject DN already exists":
 3. Uncheck **Enforce unique DN** and click Save.
 
 ---
+
+## CertSculpt
+
+A smart CLI tool to restructure SSL certificates. It automatically extracts project names from the metadata and organizes files into clean directories.
+
+### Features
+- **Smart Directory Naming**: Extracts the first part of the `friendlyName` or `Common Name` as the folder name.
+- **Auto-Parsing**: Separates the Private Key from the Certificate stack automatically.
+- **Hierarchical Detection**: Correctly identifies the **Leaf**, **Intermediate**, and **Root** certificates based on position.
+
+### Option Breakdown
+| Option | Files Produced | Description |
+| :--- | :--- | :--- |
+| **1. FullChain** | `fullchain.crt`, `private.key` | Leaf + Intermediate bundle. Standard for Nginx. |
+| **2. Split Chain** | `leaf.crt`, `chain.crt`, `private.key`| Separate identity and authority files. |
+| **3. Leaf/Key Only**| `leaf.crt`, `private.key` | Minimalist; assumes server has the chain. |
+| **4. Full Split** | `leaf.crt`, `inter.crt`, `root.crt`, `key`| Every component in its own file. |
+| **5. PKCS12** | `certificate.p12` | All-in-one binary for Windows/Java. |
+
+### Installation
+```bash
+pip install cryptography
+
+```
+
+### Usage
+
+```bash
+python cert-sculpt.py your_cert_file.pem
+
+```
